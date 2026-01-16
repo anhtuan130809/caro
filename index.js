@@ -4,80 +4,94 @@ const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" },
-});
+const io = new Server(server);
 
 app.use(express.static("public"));
 
-let players = {};
-let board = Array(9).fill(null);
-let currentPlayer = "X";
-let gameOver = false;
+const rooms = {};
 
 io.on("connection", (socket) => {
-  const playerCount = Object.keys(players).length;
+  socket.on("joinRoom", (roomId) => {
+    socket.join(roomId);
 
-  // Chặn người thứ 3
-  if (playerCount >= 2) {
-    socket.emit("full");
-    socket.disconnect();
-    return;
-  }
+    if (!rooms[roomId]) {
+      rooms[roomId] = {
+        players: {},
+        board: Array(9).fill(null),
+        currentPlayer: "X",
+        gameOver: false,
+      };
+    }
 
-  // Gán X / O
-  const symbol = playerCount === 0 ? "X" : "O";
-  players[socket.id] = symbol;
+    const room = rooms[roomId];
+    const count = Object.keys(room.players).length;
 
-  socket.emit("assign", symbol);
-  socket.emit("init", { board, currentPlayer, gameOver });
+    if (count >= 2) {
+      socket.emit("roomFull");
+      return;
+    }
 
-  // Đánh cờ
-  socket.on("move", (index) => {
-    if (gameOver) return;
-    if (board[index]) return;
-    if (players[socket.id] !== currentPlayer) return;
+    const symbol = count === 0 ? "X" : "O";
+    room.players[socket.id] = symbol;
 
-    board[index] = currentPlayer;
+    socket.emit("assign", symbol);
+    socket.emit("init", room);
+    io.to(roomId).emit("system", `${symbol} đã vào phòng`);
+  });
 
-    if (checkWin(currentPlayer)) {
-      gameOver = true;
-      io.emit("update", {
-        board,
-        currentPlayer,
-        gameOver,
-        winner: currentPlayer,
-      });
+  socket.on("move", ({ roomId, index }) => {
+    const room = rooms[roomId];
+    if (!room || room.gameOver) return;
+
+    const symbol = room.players[socket.id];
+    if (symbol !== room.currentPlayer) return;
+    if (room.board[index]) return;
+
+    room.board[index] = symbol;
+
+    if (checkWin(room.board, symbol)) {
+      room.gameOver = true;
+      io.to(roomId).emit("update", { ...room, winner: symbol });
     } else {
-      currentPlayer = currentPlayer === "X" ? "O" : "X";
-      io.emit("update", { board, currentPlayer, gameOver });
+      room.currentPlayer = symbol === "X" ? "O" : "X";
+      io.to(roomId).emit("update", room);
     }
   });
 
-  // Reset game
-  socket.on("reset", () => {
-    board = Array(9).fill(null);
-    currentPlayer = "X";
-    gameOver = false;
-    io.emit("reset", { board, currentPlayer, gameOver });
+  socket.on("reset", (roomId) => {
+    const room = rooms[roomId];
+    if (!room) return;
+
+    room.board = Array(9).fill(null);
+    room.currentPlayer = "X";
+    room.gameOver = false;
+
+    io.to(roomId).emit("init", room);
   });
 
-  // Chat
-  socket.on("chat", (msg) => {
-    const player = players[socket.id] || "Unknown";
-    io.emit("chat", { player, msg });
+  socket.on("chat", ({ roomId, msg }) => {
+    const room = rooms[roomId];
+    if (!room) return;
+    const player = room.players[socket.id];
+    io.to(roomId).emit("chat", { player, msg });
   });
 
   socket.on("disconnect", () => {
-    delete players[socket.id];
-    board = Array(9).fill(null);
-    currentPlayer = "X";
-    gameOver = false;
-    io.emit("reset", { board, currentPlayer, gameOver });
+    for (const roomId in rooms) {
+      const room = rooms[roomId];
+      if (room.players[socket.id]) {
+        delete room.players[socket.id];
+        room.board = Array(9).fill(null);
+        room.currentPlayer = "X";
+        room.gameOver = false;
+        io.to(roomId).emit("system", "Đối thủ đã rời phòng, ván mới bắt đầu");
+        io.to(roomId).emit("init", room);
+      }
+    }
   });
 });
 
-function checkWin(p) {
+function checkWin(board, p) {
   const wins = [
     [0, 1, 2],
     [3, 4, 5],
@@ -88,10 +102,9 @@ function checkWin(p) {
     [0, 4, 8],
     [2, 4, 6],
   ];
-  return wins.some((combo) => combo.every((i) => board[i] === p));
+  return wins.some((c) => c.every((i) => board[i] === p));
 }
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+server.listen(3000, () => {
+  console.log("Server running at http://localhost:3000");
 });

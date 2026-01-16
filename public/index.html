@@ -2,257 +2,236 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <title>Cờ Caro 2 Người + Chat</title>
+    <title>Caro Realtime Pro</title>
     <style>
-      * {
-        box-sizing: border-box;
-      }
-
       body {
         margin: 0;
         height: 100vh;
         background: linear-gradient(135deg, #667eea, #764ba2);
-        font-family: "Segoe UI", Arial, sans-serif;
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: white;
+      }
+
+      h1 {
+        margin: 15px 0 5px;
+        font-size: 32px;
+        letter-spacing: 1px;
+      }
+
+      #topBar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      #container {
+        flex: 1;
+        width: 90%;
+        max-width: 900px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+      }
+
+      #leftPanel {
         display: flex;
         flex-direction: column;
         align-items: center;
       }
 
-      h2 {
-        margin: 20px 0 10px;
-        color: white;
-        font-size: 32px;
-        letter-spacing: 1px;
-        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-      }
-
-      #status {
-        color: #fff;
-        margin-bottom: 15px;
-        font-size: 18px;
-      }
-
-      /* Container chính */
-      #main {
-        display: flex;
-        gap: 30px;
-        background: rgba(255, 255, 255, 0.15);
-        padding: 25px 30px;
-        border-radius: 16px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-      }
-
-      /* BÀN CỜ */
       #board {
         display: grid;
         grid-template-columns: repeat(3, 100px);
         grid-template-rows: repeat(3, 100px);
-        gap: 10px;
+        gap: 8px;
+        margin-top: 10px;
       }
 
       .cell {
         width: 100px;
         height: 100px;
         background: white;
-        border-radius: 12px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        color: #333;
         font-size: 48px;
-        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        border-radius: 12px;
+        transition: 0.2s;
       }
 
       .cell:hover {
-        background: #f0f0f0;
+        background: #f1f1f1;
         transform: scale(1.05);
       }
 
-      /* CHAT */
-      #chatBox {
-        width: 280px;
-        display: flex;
-        flex-direction: column;
+      #status {
+        margin-top: 10px;
+        font-size: 18px;
+        font-weight: bold;
       }
 
-      #chatBox h3 {
-        margin: 0 0 10px;
-        text-align: center;
-        color: white;
-        font-weight: 500;
+      #rightPanel {
+        width: 300px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        height: 350px;
       }
 
       #messages {
         flex: 1;
         background: white;
-        border-radius: 10px;
-        padding: 10px;
+        color: black;
+        border-radius: 8px;
+        padding: 5px;
         overflow-y: auto;
+        margin-bottom: 5px;
         font-size: 14px;
-        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 10px;
-      }
-
-      #messages div {
-        margin-bottom: 6px;
       }
 
       #chatInput {
-        padding: 8px 10px;
-        border-radius: 8px;
+        padding: 6px;
+        border-radius: 6px;
         border: none;
         outline: none;
-        margin-bottom: 8px;
-        font-size: 14px;
+        margin-bottom: 5px;
       }
 
-      #sendBtn {
-        padding: 8px;
+      button {
+        padding: 6px 10px;
         border: none;
-        border-radius: 8px;
-        background: #667eea;
-        color: white;
+        border-radius: 6px;
         cursor: pointer;
-        font-size: 14px;
-        transition: background 0.2s;
+        background: #ffcc00;
+        font-weight: bold;
       }
 
-      #sendBtn:hover {
-        background: #5563c1;
+      button:hover {
+        background: #ffdd33;
       }
 
-      /* NÚT RESET */
-      #resetBtn {
-        margin-top: 15px;
-        padding: 10px 20px;
+      #roomInput {
+        padding: 6px;
+        border-radius: 6px;
         border: none;
-        border-radius: 20px;
-        background: #ff5e62;
-        background: linear-gradient(to right, #ff9966, #ff5e62);
-        color: white;
-        font-size: 16px;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        transition: transform 0.2s, box-shadow 0.2s;
+        outline: none;
       }
 
-      #resetBtn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      #musicBtn {
+        background: #00ffcc;
       }
     </style>
   </head>
-
   <body>
-    <h2>🎮 Cờ Caro Realtime 2 Người + Chat</h2>
-    <div id="status">Đang kết nối...</div>
+    <h1>🎮 Caro Realtime Pro</h1>
 
-    <div id="main">
-      <!-- Bàn cờ bên trái -->
-      <div id="board"></div>
+    <div id="topBar">
+      <input id="roomInput" placeholder="Nhập mã phòng..." />
+      <button id="joinBtn">Vào phòng</button>
+      <button id="musicBtn">🔊 Bật nhạc</button>
+    </div>
 
-      <!-- Chat bên phải -->
-      <div id="chatBox">
-        <h3>Chat</h3>
+    <div id="container">
+      <div id="leftPanel">
+        <div id="board"></div>
+        <div id="status">Chưa vào phòng</div>
+        <button id="resetBtn">🔄 Chơi lại</button>
+      </div>
+
+      <div id="rightPanel">
         <div id="messages"></div>
-        <input id="chatInput" type="text" placeholder="Nhập tin nhắn..." />
+        <input id="chatInput" placeholder="Nhập tin nhắn..." />
         <button id="sendBtn">Gửi</button>
       </div>
     </div>
 
-    <button id="resetBtn">Chơi lại</button>
+    <audio id="clickSound" src="sounds/click.mp3"></audio>
+    <audio id="winSound" src="sounds/win.mp3"></audio>
+    <audio id="bgMusic" src="sounds/bg.mp3" loop></audio>
 
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-      const socket = io("http://localhost:3000");
+      const socket = io();
 
       const boardDiv = document.getElementById("board");
       const statusDiv = document.getElementById("status");
-      const resetBtn = document.getElementById("resetBtn");
-
       const messagesDiv = document.getElementById("messages");
       const chatInput = document.getElementById("chatInput");
       const sendBtn = document.getElementById("sendBtn");
+      const joinBtn = document.getElementById("joinBtn");
+      const roomInput = document.getElementById("roomInput");
+      const musicBtn = document.getElementById("musicBtn");
+      const resetBtn = document.getElementById("resetBtn");
 
-      let board = Array(9).fill(null);
-      let currentPlayer = "X";
-      let gameOver = false;
+      const clickSound = document.getElementById("clickSound");
+      const winSound = document.getElementById("winSound");
+      const bgMusic = document.getElementById("bgMusic");
+
+      let musicOn = false;
+      let roomId = "";
       let mySymbol = null;
+      let currentState = null;
 
-      function renderBoard() {
-        boardDiv.innerHTML = "";
-        board.forEach((value, index) => {
-          const cell = document.createElement("div");
-          cell.className = "cell";
-          cell.textContent = value || "";
+      musicBtn.onclick = () => {
+        if (!musicOn) {
+          bgMusic.play();
+          musicBtn.textContent = "🔇 Tắt nhạc";
+          musicOn = true;
+        } else {
+          bgMusic.pause();
+          musicBtn.textContent = "🔊 Bật nhạc";
+          musicOn = false;
+        }
+      };
 
-          cell.addEventListener("click", () => {
-            if (gameOver) return;
-            if (currentPlayer !== mySymbol) return;
-            socket.emit("move", index);
-          });
+      joinBtn.onclick = () => {
+        roomId = roomInput.value.trim();
+        if (!roomId) return alert("Nhập mã phòng");
+        socket.emit("joinRoom", roomId);
+      };
 
-          boardDiv.appendChild(cell);
-        });
-      }
+      resetBtn.onclick = () => {
+        if (!roomId) return;
+        socket.emit("reset", roomId);
+      };
 
       socket.on("assign", (symbol) => {
         mySymbol = symbol;
         statusDiv.textContent = "Bạn là: " + symbol;
       });
 
-      socket.on("full", () => {
-        alert("Phòng đã đủ 2 người!");
+      socket.on("roomFull", () => {
+        alert("Phòng đã đủ 2 người");
       });
 
-      socket.on("init", (data) => {
-        board = data.board;
-        currentPlayer = data.currentPlayer;
-        gameOver = data.gameOver;
-        renderBoard();
+      socket.on("init", (room) => {
+        currentState = room;
+        render();
       });
 
-      socket.on("update", (data) => {
-        board = data.board;
-        currentPlayer = data.currentPlayer;
-        gameOver = data.gameOver;
-
-        if (data.winner) {
-          statusDiv.textContent = data.winner + " thắng!";
-        } else {
-          statusDiv.textContent = "Lượt: " + currentPlayer;
+      socket.on("update", (room) => {
+        currentState = room;
+        render();
+        if (room.winner) {
+          statusDiv.textContent = room.winner + " thắng!";
+          winSound.play();
         }
-
-        renderBoard();
       });
 
-      socket.on("reset", (data) => {
-        board = data.board;
-        currentPlayer = data.currentPlayer;
-        gameOver = data.gameOver;
-        statusDiv.textContent = "Lượt: " + currentPlayer;
-        renderBoard();
+      socket.on("system", (msg) => {
+        const div = document.createElement("div");
+        div.style.color = "gray";
+        div.textContent = msg;
+        messagesDiv.appendChild(div);
       });
-
-      resetBtn.addEventListener("click", () => {
-        socket.emit("reset");
-      });
-
-      // Chat
-      sendBtn.addEventListener("click", sendMessage);
-      chatInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") sendMessage();
-      });
-
-      function sendMessage() {
-        const text = chatInput.value.trim();
-        if (!text) return;
-        socket.emit("chat", text);
-        chatInput.value = "";
-      }
 
       socket.on("chat", (data) => {
         const div = document.createElement("div");
@@ -260,6 +239,38 @@
         messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
       });
+
+      function render() {
+        const { board, currentPlayer } = currentState;
+
+        boardDiv.innerHTML = "";
+
+        board.forEach((v, i) => {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          cell.textContent = v || "";
+
+          cell.onclick = () => {
+            if (!v && mySymbol === currentPlayer) {
+              clickSound.play();
+              socket.emit("move", { roomId, index: i });
+            }
+          };
+
+          boardDiv.appendChild(cell);
+        });
+
+        if (!currentState.gameOver) {
+          statusDiv.textContent = "Lượt: " + currentPlayer;
+        }
+      }
+
+      sendBtn.onclick = () => {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        socket.emit("chat", { roomId, msg: text });
+        chatInput.value = "";
+      };
     </script>
   </body>
 </html>
